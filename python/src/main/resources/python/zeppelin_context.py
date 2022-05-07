@@ -121,19 +121,19 @@ class PyZeppelinContext(object):
         return self.z.runAll()
 
     def angular(self, name, noteId = None, paragraphId = None):
-        if noteId == None:
+        if noteId is None:
             return self.z.angular(name, self.z.getInterpreterContext().getNoteId(), paragraphId)
         else:
             return self.z.angular(name, noteId, paragraphId)
 
     def angularBind(self, name, value, noteId = None, paragraphId = None):
-        if noteId == None:
+        if noteId is None:
             return self.z.angularBind(name, value, noteId, paragraphId)
         else:
             return self.z.angularBind(name, value, self.z.getInterpreterContext().getNoteId(), paragraphId)
 
     def angularUnbind(self, name, noteId = None):
-        if noteId == None:
+        if noteId is None:
             self.z.angularUnbind(name, self.z.getInterpreterContext().getNoteId())
         else:
             self.z.angularUnbind(name, noteId)
@@ -164,10 +164,8 @@ class PyZeppelinContext(object):
 
     def getParamOptions(self, options):
         javaOptions = self.gateway.new_array(self.paramOption, len(options))
-        i = 0
-        for tuple in options:
+        for i, tuple in enumerate(options):
             javaOptions[i] = self.paramOption(tuple[0], tuple[1])
-            i += 1
         return javaOptions
 
     def getDefaultChecked(self, defaultChecked):
@@ -184,7 +182,7 @@ class PyZeppelinContext(object):
             # and so a dependency on pandas
             self.show_dataframe(p, **kwargs)
         else:
-            print(str(p))
+            print(p)
 
     def normalizeColumn(self, column):
         return column.replace("\t", " ").replace("\r\n", " ").replace("\n", " ")
@@ -192,10 +190,7 @@ class PyZeppelinContext(object):
     def show_dataframe(self, df, **kwargs):
         """Pretty prints DF using Table Display System
         """
-        show_index = False
-        if 'show_index' in kwargs:
-            show_index = kwargs['show_index']
-
+        show_index = kwargs['show_index'] if 'show_index' in kwargs else False
         exceed_limit = len(df) > self.max_result
         header_buf = StringIO("")
         if show_index:
@@ -213,7 +208,7 @@ class PyZeppelinContext(object):
         index = df.index.values
         for idx, row in zip(index, rows):
             if show_index:
-                body_buf.write("%html <strong>{}</strong>".format(idx))
+                body_buf.write(f"%html <strong>{idx}</strong>")
                 body_buf.write("\t")
             body_buf.write(self.normalizeColumn(str(row[0])))
             for cell in row[1:]:
@@ -224,7 +219,7 @@ class PyZeppelinContext(object):
                 body_buf.write("\n")
         body_buf.seek(0)
         header_buf.seek(0)
-        print("%table " + header_buf.read() + body_buf.read())
+        print(f"%table {header_buf.read()}{body_buf.read()}")
         body_buf.close()
         header_buf.close()
         if exceed_limit:

@@ -30,7 +30,7 @@ from subprocess import call, check_call
 # If there is demand, we could easily make parts or all comand line arguments as well
 #######################################################################################################################
 tar_name = "apache-mahout-distribution-0.12.2.tar.gz"
-mahout_bin_url =  "http://apache.osuosl.org/mahout/0.12.2/%s" % tar_name
+mahout_bin_url = f"http://apache.osuosl.org/mahout/0.12.2/{tar_name}"
 mahout_version = "0.12.2"
 
 parser = argparse.ArgumentParser()
@@ -50,17 +50,20 @@ class ZeppelinTerpWrangler:
         self.interpreter_json_path = interpreter_json_path
 
     def _getTerpID(self, terpName):
-        terp_id = None
-        for k, v in self.interpreter_json['interpreterSettings'].iteritems():
-            if v['name'] == terpName:
-                terp_id = k
-                break
-
-        return terp_id
+        return next(
+            (
+                k
+                for k, v in self.interpreter_json[
+                    'interpreterSettings'
+                ].iteritems()
+                if v['name'] == terpName
+            ),
+            None,
+        )
 
     def _terpExists(self, terpName):
         terp_id = self._getTerpID(terpName)
-        if terp_id == None:
+        if terp_id is None:
             return False
         return True
 
@@ -168,7 +171,7 @@ class ZeppelinTerpWrangler:
 #######################################################################################################################
 
 def valid_zeppelin_home(path):
-    return isfile(path + "/bin/zeppelin-daemon.sh")
+    return isfile(f"{path}/bin/zeppelin-daemon.sh")
 
 if args.zeppelin_home == None:
     zeppelin_home = getcwd()

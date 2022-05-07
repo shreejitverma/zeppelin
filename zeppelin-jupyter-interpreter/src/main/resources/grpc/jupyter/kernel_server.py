@@ -168,7 +168,7 @@ def serve(kernel_name, port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     kernel = KernelServer(server, kernel_name)
     kernel_pb2_grpc.add_JupyterKernelServicer_to_server(kernel, server)
-    server.add_insecure_port('[::]:' + port)
+    server.add_insecure_port(f'[::]:{port}')
     server.start()
     kernel.start()
     try:

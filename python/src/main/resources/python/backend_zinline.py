@@ -90,17 +90,17 @@ class FigureCanvasZInline(FigureCanvasAgg):
         fmt = kwargs.get('format', mpl_config.get('format'))
         if fmt == 'svg':
             raise ValueError("get_bytes() does not support svg, use png or jpg")
-        
+
         # Express the image as bytes
         buf = BytesIO()
         self.print_figure(buf, **kwargs)
         fmt = fmt.encode()
         if sys.version_info >= (3, 4) and sys.version_info < (3, 5):
-            byte_str = bytes("data:image/%s;base64," %fmt, "utf-8")
+            byte_str = bytes(f"data:image/{fmt};base64,", "utf-8")
         else:
             byte_str = b"data:image/%s;base64," %fmt
         byte_str += base64.b64encode(buf.getvalue())
-            
+
         # Python3 forces all strings to default to unicode, but for raster image
         # formats (eg png, jpg), we want to work with bytes. Thus this step is
         # needed to ensure compatability for all python versions.
@@ -253,8 +253,7 @@ def new_figure_manager_given_figure(num, figure):
     Create a new figure manager instance for the given figure.
     """
     canvas = FigureCanvasZInline(figure)
-    manager = FigureManagerZInline(canvas, num)
-    return manager
+    return FigureManagerZInline(canvas, num)
 
 
 ########################################################################
@@ -275,22 +274,22 @@ def zdisplay(fig, **kwargs):
     # Check if format is supported
     supported_formats = mpl_config.get('supported_formats')
     if fmt not in supported_formats:
-        raise ValueError("Unsupported format %s" %fmt)
-    
+        raise ValueError(f"Unsupported format {fmt}")
+
     # For SVG the data string has to be unicode, not bytes
     if fmt == 'svg':
         img = fig.canvas.get_svg(**kwargs)
-        
+
         # This is needed to ensure the SVG image is the correct size.
         # We should find a better way to do this...
-        width = '{}px'.format(mpl_config.get('width'))
-        height = '{}px'.format(mpl_config.get('height'))
+        width = f"{mpl_config.get('width')}px"
+        height = f"{mpl_config.get('height')}px"
     else:
         # Express the image as bytes
         src = fig.canvas.manager.angular_bind(**kwargs)
         img = "<img src={src} style='width={width};height:{height}'>"
         img = img.format(src=src, width=width, height=height)
-    
+
     # Print the image to the notebook paragraph via the %html magic
     html = "<div style='width:{width};height:{height}'>{img}<div>"
     print(html.format(width=width, height=height, img=img))

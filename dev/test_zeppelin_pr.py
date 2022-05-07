@@ -33,8 +33,8 @@ else:
     from urllib.request import urlopen
 
 if len(sys.argv) == 1:
-    print("usage) " + sys.argv[0] + " [#PR]")
-    print("   eg) " + sys.argv[0] + " 122")
+    print(f"usage) {sys.argv[0]} [#PR]")
+    print(f"   eg) {sys.argv[0]} 122")
     sys.exit(1)
 
 
@@ -42,9 +42,9 @@ pr=sys.argv[1]
 githubApi="https://api.github.com/repos/apache/zeppelin"
 
 reader = codecs.getreader("utf-8")
-prInfo = json.load(reader(urlopen(githubApi + "/pulls/" + pr)))
+prInfo = json.load(reader(urlopen(f"{githubApi}/pulls/{pr}")))
 if "message" in prInfo and prInfo["message"] == "Not Found":
-    sys.stderr.write("PullRequest #" + pr + " not found\n")
+    sys.stderr.write(f"PullRequest #{pr}" + " not found\n")
     sys.exit(1)
 
 prUser=prInfo['user']['login']
@@ -53,18 +53,18 @@ prBranch=prInfo['head']['label'].replace(":", "/")
 print(prBranch)
 
 # create local branch
-exitCode = os.system("git checkout -b pr" + pr)
+exitCode = os.system(f"git checkout -b pr{pr}")
 if exitCode != 0:
     sys.exit(1)
 
 # add remote repository and fetch
-exitCode = os.system("git remote remove " + prUser)
-exitCode = os.system("git remote add " + prUser + " " + prRepoUrl)
+exitCode = os.system(f"git remote remove {prUser}")
+exitCode = os.system(f"git remote add {prUser} {prRepoUrl}")
 if exitCode != 0:
     sys.stderr.write("Can not add remote repository.\n")
     sys.exit(1)
 
-exitCode = os.system("git fetch " + prUser)
+exitCode = os.system(f"git fetch {prUser}")
 if exitCode != 0:
     sys.stderr.write("Can't fetch remote repository.\n")
     sys.exit(1)
@@ -72,9 +72,14 @@ if exitCode != 0:
 
 currentBranch = subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True).rstrip().decode("utf-8")
 
-print("Merge branch " + prBranch + " into " + currentBranch)
+print(f"Merge branch {prBranch} into {currentBranch}")
 
-rev = subprocess.check_output("git rev-parse " + prBranch, shell=True).rstrip().decode("utf-8")
+rev = (
+    subprocess.check_output(f"git rev-parse {prBranch}", shell=True)
+    .rstrip()
+    .decode("utf-8")
+)
+
 prAuthor = subprocess.check_output("git --no-pager show -s --format=\"%an <%ae>\" " + rev, shell=True).rstrip().decode("utf-8")
 prAuthorDate = subprocess.check_output("git --no-pager show -s --format=\"%ad\" " + rev, shell=True).rstrip().decode("utf-8")
 
@@ -92,20 +97,24 @@ commitMsg = prTitle + "\n"
 if prBody :
   commitMsg += prBody + "\n\n"
 for author in authorList:
-    commitMsg += "Author: " + author +"\n"
+    commitMsg += f"Author: {author}" + "\n"
 commitMsg += "\n"
-commitMsg += "Closes #" + pr + " from " + prBranch + " and squashes the following commits:\n\n"
+commitMsg += (
+    f"Closes #{pr} from {prBranch}"
+    + " and squashes the following commits:\n\n"
+)
+
 commitMsg += subprocess.check_output("git log --pretty=format:\"%h [%an] %s\" " + currentBranch + ".." + prBranch, shell=True).rstrip().decode("utf-8")
 
-exitCode = os.system("git merge --no-commit --squash " + prBranch)
+exitCode = os.system(f"git merge --no-commit --squash {prBranch}")
 if exitCode != 0:
     sys.stderr.write("Can not merge\n")
     sys.exit(1)
-    
+
 exitCode = os.system('git commit -a --author "' + prAuthor + '" --date "' + prAuthorDate + '" -m"' + commitMsg + '"')
 if exitCode != 0:
     sys.stderr.write("Commit failed\n")
     sys.exit(1)
 
-os.system("git remote remove " + prUser)
-print("Branch " + prBranch + " is merged into " + currentBranch)
+os.system(f"git remote remove {prUser}")
+print(f"Branch {prBranch} is merged into {currentBranch}")

@@ -32,7 +32,7 @@ Bar <- gvisBarChart(df)
 print(Bar, tag = 'chart')
     """))
     for r in response:
-        print("output:" + r.output)
+        print(f"output:{r.output}")
 
 
 if __name__ == '__main__':
